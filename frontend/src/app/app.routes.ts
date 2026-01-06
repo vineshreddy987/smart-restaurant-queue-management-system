@@ -8,7 +8,13 @@ export const routes: Routes = [
   { path: 'tables', loadComponent: () => import('./components/table-list/table-list.component').then(m => m.TableListComponent), canActivate: [authGuard] },
   { path: 'queue', loadComponent: () => import('./components/queue-management/queue-management.component').then(m => m.QueueManagementComponent), canActivate: [authGuard] },
   { path: 'reservation', loadComponent: () => import('./components/reservation/reservation.component').then(m => m.ReservationComponent), canActivate: [authGuard] },
+  
+  // Customer Booking History
+  { path: 'reservations/history', loadComponent: () => import('./components/booking-history/customer-history.component').then(m => m.CustomerHistoryComponent), canActivate: [authGuard] },
+  
+  // Manager Routes
   { path: 'manager/dashboard', loadComponent: () => import('./components/manager-dashboard/manager-dashboard.component').then(m => m.ManagerDashboardComponent), canActivate: [authGuard, managerGuard] },
+  { path: 'manager/history', loadComponent: () => import('./components/booking-history/manager-history.component').then(m => m.ManagerHistoryComponent), canActivate: [authGuard, managerGuard] },
   { path: 'analytics', loadComponent: () => import('./components/analytics/analytics.component').then(m => m.AnalyticsComponent), canActivate: [authGuard, managerGuard] },
   
   // Admin Routes
@@ -16,6 +22,7 @@ export const routes: Routes = [
   { path: 'admin/users', loadComponent: () => import('./components/admin/admin-users/admin-users.component').then(m => m.AdminUsersComponent), canActivate: [authGuard, adminGuard] },
   { path: 'admin/settings', loadComponent: () => import('./components/admin/admin-settings/admin-settings.component').then(m => m.AdminSettingsComponent), canActivate: [authGuard, adminGuard] },
   { path: 'admin/logs', loadComponent: () => import('./components/admin/admin-logs/admin-logs.component').then(m => m.AdminLogsComponent), canActivate: [authGuard, adminGuard] },
+  { path: 'admin/history', loadComponent: () => import('./components/booking-history/admin-history.component').then(m => m.AdminHistoryComponent), canActivate: [authGuard, adminGuard] },
   
   { path: 'unauthorized', loadComponent: () => import('./components/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent) },
   { path: '**', redirectTo: '/' }

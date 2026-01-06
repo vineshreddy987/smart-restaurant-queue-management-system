@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -21,6 +22,7 @@ import { TableVisualizationComponent } from '../table-visualization/table-visual
   imports: [
     CommonModule,
     ReactiveFormsModule, 
+    RouterLink,
     MatCardModule, 
     MatFormFieldModule, 
     MatInputModule, 
@@ -152,6 +154,9 @@ import { TableVisualizationComponent } from '../table-visualization/table-visual
       <mat-card class="my-reservations">
         <mat-card-header>
           <mat-card-title>My Reservations</mat-card-title>
+          <a mat-button routerLink="/reservations/history" class="history-link">
+            <mat-icon>history</mat-icon> View History
+          </a>
         </mat-card-header>
         <mat-card-content>
           @if (loadingReservations) {
@@ -178,9 +183,10 @@ import { TableVisualizationComponent } from '../table-visualization/table-visual
   styles: [`
     .reservation-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .reservation-layout.disabled { opacity: 0.5; pointer-events: none; }
-    @media (max-width: 768px) { .reservation-layout { grid-template-columns: 1fr; } }
     mat-form-field { margin-bottom: 16px; }
-    .reservation-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+    .reservation-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; gap: 12px; flex-wrap: wrap; }
+    mat-card-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .history-link { margin-left: auto; }
     .table-preview { 
       background: #f5f5f5; 
       border-radius: 8px; 
@@ -212,9 +218,24 @@ import { TableVisualizationComponent } from '../table-visualization/table-visual
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
     }
-    .disabled-notice mat-icon { color: #ff9800; font-size: 32px; width: 32px; height: 32px; }
+    .disabled-notice mat-icon { color: #ff9800; font-size: 32px; width: 32px; height: 32px; flex-shrink: 0; }
     .disabled-notice p { margin: 0; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) { 
+      .reservation-layout { grid-template-columns: 1fr; }
+      .time-picker { flex-wrap: wrap; }
+      .time-hour, .time-minute, .time-period { flex: 1 1 30%; min-width: 80px; }
+    }
+    
+    @media (max-width: 480px) {
+      .reservation-item { flex-direction: column; align-items: flex-start; }
+      .reservation-item button { align-self: flex-end; }
+      mat-card-header { flex-direction: column; align-items: flex-start; }
+      .history-link { margin-left: 0; margin-top: 8px; }
+    }
   `]
 })
 export class ReservationComponent implements OnInit {

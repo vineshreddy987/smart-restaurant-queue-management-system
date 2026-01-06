@@ -17,7 +17,7 @@ import { AuthService } from '../../services/auth.service';
     <!-- Mini Header -->
     <header class="login-header">
       <a routerLink="/" class="brand">
-        <img src="assets/images/logo-chair.png" alt="SmartServe" class="brand-logo">
+        <img src="assets/images/logo-chair.png" alt="SmartServe" class="brand-logo" width="40" height="40">
         <span class="brand-name">SmartServe</span>
       </a>
       <a routerLink="/" class="home-link">
@@ -29,7 +29,7 @@ import { AuthService } from '../../services/auth.service';
     <div class="login-container">
       <mat-card class="login-card">
         <div class="card-header">
-          <img src="assets/images/logo-chair.png" alt="SmartServe" class="card-logo">
+          <img src="assets/images/logo-chair.png" alt="SmartServe" class="card-logo" width="80" height="80">
           <h1>Welcome Back</h1>
           <p class="tagline">Smart Seating. Seamless Service.</p>
         </div>

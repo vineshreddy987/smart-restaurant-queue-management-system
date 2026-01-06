@@ -168,6 +168,27 @@ router.put('/:id', authenticate, authorize('Manager', 'Admin'), [
     if (status === 'Available') {
       query += ', current_customer_id = NULL, reservation_time = NULL, occupied_at = NULL, reservation_duration = NULL';
       
+      // Mark any active reservation as completed in history
+      if (existing[0].current_customer_id) {
+        const formatForMySQL = (d: Date) => {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const hours = String(d.getHours()).padStart(2, '0');
+          const mins = String(d.getMinutes()).padStart(2, '0');
+          const secs = String(d.getSeconds()).padStart(2, '0');
+          return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+        };
+        
+        await pool.query(
+          `UPDATE reservation_history 
+           SET status = 'COMPLETED', completed_at = ?
+           WHERE table_id = ? AND customer_id = ? AND status IN ('RESERVED', 'OCCUPIED')
+           ORDER BY created_at DESC LIMIT 1`,
+          [formatForMySQL(new Date()), id, existing[0].current_customer_id]
+        );
+      }
+      
       // Cancel any scheduled notification for this table
       const { cancelNotification } = await import('../services/notificationScheduler');
       cancelNotification(parseInt(id));
@@ -248,6 +269,27 @@ router.patch('/:id/status', authenticate, authorize('Manager', 'Admin'), [
 
     if (status === 'Available') {
       query += ', current_customer_id = NULL, reservation_time = NULL, occupied_at = NULL, reservation_duration = NULL';
+      
+      // Mark any active reservation as completed in history
+      if (tables[0].current_customer_id) {
+        const formatForMySQL = (d: Date) => {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const hours = String(d.getHours()).padStart(2, '0');
+          const mins = String(d.getMinutes()).padStart(2, '0');
+          const secs = String(d.getSeconds()).padStart(2, '0');
+          return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+        };
+        
+        await pool.query(
+          `UPDATE reservation_history 
+           SET status = 'COMPLETED', completed_at = ?
+           WHERE table_id = ? AND customer_id = ? AND status IN ('RESERVED', 'OCCUPIED')
+           ORDER BY created_at DESC LIMIT 1`,
+          [formatForMySQL(new Date()), id, tables[0].current_customer_id]
+        );
+      }
       
       // Cancel any scheduled notification for this table
       const { cancelNotification } = await import('../services/notificationScheduler');

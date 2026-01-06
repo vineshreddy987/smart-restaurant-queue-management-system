@@ -100,14 +100,11 @@ import { AdminService, DashboardStats } from '../../../services/admin.service';
             <button mat-stroked-button routerLink="/admin/users">
               <mat-icon>person_add</mat-icon> Add User
             </button>
-            <button mat-stroked-button routerLink="/admin/tables">
-              <mat-icon>table_restaurant</mat-icon> View Tables
-            </button>
-            <button mat-stroked-button routerLink="/admin/queue">
-              <mat-icon>format_list_numbered</mat-icon> Queue Monitor
+            <button mat-stroked-button routerLink="/admin/history">
+              <mat-icon>history</mat-icon> Booking History
             </button>
             <button mat-stroked-button routerLink="/admin/logs">
-              <mat-icon>history</mat-icon> View Logs
+              <mat-icon>list_alt</mat-icon> View Logs
             </button>
           </div>
         </div>
@@ -173,9 +170,9 @@ import { AdminService, DashboardStats } from '../../../services/admin.service';
   `,
   styles: [`
     .admin-dashboard { padding: 20px; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
     .header h2 { margin: 0; }
-    .header-actions { display: flex; gap: 12px; }
+    .header-actions { display: flex; gap: 12px; flex-wrap: wrap; }
     .loading { display: flex; justify-content: center; padding: 60px; }
     
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
@@ -201,23 +198,42 @@ import { AdminService, DashboardStats } from '../../../services/admin.service';
     .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; }
     .quick-actions button { display: flex; align-items: center; gap: 8px; }
     
-    .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
     
     .peak-item { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-    .peak-item .hour { width: 60px; font-size: 14px; }
-    .peak-item .bar { height: 20px; background: linear-gradient(90deg, #1976d2, #42a5f5); border-radius: 4px; }
-    .peak-item .count { font-weight: bold; }
+    .peak-item .hour { width: 60px; font-size: 14px; flex-shrink: 0; }
+    .peak-item .bar { height: 20px; background: linear-gradient(90deg, #1976d2, #42a5f5); border-radius: 4px; flex: 1; min-width: 50px; }
+    .peak-item .count { font-weight: bold; flex-shrink: 0; }
     
     .util-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .util-item .type { width: 80px; }
-    .util-bar { flex: 1; height: 20px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+    .util-item .type { width: 80px; flex-shrink: 0; }
+    .util-bar { flex: 1; height: 20px; background: #e0e0e0; border-radius: 4px; overflow: hidden; min-width: 60px; }
     .util-bar .fill { height: 100%; background: #4caf50; }
-    .util-item .ratio { font-weight: bold; width: 50px; text-align: right; }
+    .util-item .ratio { font-weight: bold; width: 50px; text-align: right; flex-shrink: 0; }
     
-    .user-status { display: flex; gap: 24px; justify-content: center; padding: 20px; }
+    .user-status { display: flex; gap: 24px; justify-content: center; padding: 20px; flex-wrap: wrap; }
     .status-item { display: flex; align-items: center; gap: 8px; }
     .status-item.active mat-icon { color: #4caf50; }
     .status-item.inactive mat-icon { color: #f44336; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .admin-dashboard { padding: 12px; }
+      .header { flex-direction: column; align-items: flex-start; }
+      .header-actions { width: 100%; }
+      .header-actions button { flex: 1; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .quick-actions { flex-direction: column; }
+      .quick-actions button { width: 100%; justify-content: center; }
+    }
+    
+    @media (max-width: 600px) {
+      .admin-dashboard { padding: 8px; }
+      .stat-value { font-size: 28px; }
+      .stat-card mat-icon { font-size: 36px; width: 36px; height: 36px; }
+      .analytics-grid { grid-template-columns: 1fr; }
+      .peak-item .hour { width: 50px; font-size: 12px; }
+    }
   `]
 })
 export class AdminDashboardComponent implements OnInit {

@@ -29,7 +29,7 @@ import { AuthService } from '../../services/auth.service';
       @if (isOpen) {
         <mat-icon>close</mat-icon>
       } @else {
-        <img src="assets/images/logo-chair.png" alt="SmartServe" class="chat-toggle-logo">
+        <img src="assets/images/logo-chair.png" alt="SmartServe" class="chat-toggle-logo" width="36" height="36">
       }
     </button>
 
@@ -37,7 +37,7 @@ import { AuthService } from '../../services/auth.service';
     @if (isOpen) {
       <div class="chat-window">
         <div class="chat-header">
-          <img src="assets/images/logo-chair.png" alt="SmartServe" class="header-logo">
+          <img src="assets/images/logo-chair.png" alt="SmartServe" class="header-logo" width="32" height="32">
           <span>SmartServe Assistant</span>
           <button mat-icon-button (click)="toggleChat()">
             <mat-icon>close</mat-icon>

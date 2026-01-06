@@ -109,6 +109,31 @@ export const initDatabase = async () => {
   `);
 
   // ============================================
+  // AUXILIARY TABLE: Reservation History (for booking history)
+  // ============================================
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS reservation_history (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      customer_id INT NOT NULL,
+      table_id INT NOT NULL,
+      table_number INT NOT NULL,
+      table_type ENUM('Regular', 'VIP') DEFAULT 'Regular',
+      party_size INT DEFAULT 1,
+      reservation_time DATETIME NOT NULL,
+      reservation_duration INT DEFAULT 60,
+      status ENUM('RESERVED', 'OCCUPIED', 'COMPLETED', 'CANCELLED', 'EXPIRED') DEFAULT 'RESERVED',
+      created_by_id INT NULL,
+      created_by_role ENUM('Customer', 'Manager', 'Admin') DEFAULT 'Customer',
+      seated_by_id INT NULL,
+      completed_at DATETIME NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (created_by_id) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (seated_by_id) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `);
+
+  // ============================================
   // AUXILIARY TABLE: Admin Logs (for audit trail)
   // ============================================
   await pool.query(`
@@ -158,7 +183,7 @@ export const initDatabase = async () => {
 
   console.log('Database initialized successfully');
   console.log('Core Tables: users, restaurant_tables');
-  console.log('Auxiliary Tables: queue, system_settings, admin_logs, error_logs');
+  console.log('Auxiliary Tables: queue, system_settings, admin_logs, error_logs, reservation_history');
 };
 
 // Error logging helper

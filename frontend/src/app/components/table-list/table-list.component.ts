@@ -48,7 +48,17 @@ import { TableVisualizationComponent } from '../table-visualization/table-visual
         }
       </div>
     }
-  `
+  `,
+  styles: [`
+    h2 { margin-bottom: 20px; }
+    .table-card mat-card-content { text-align: center; }
+    .table-card mat-card-content p { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0; }
+    
+    @media (max-width: 600px) {
+      h2 { font-size: 1.25rem; margin-bottom: 12px; }
+      .table-card { margin-bottom: 12px; }
+    }
+  `]
 })
 export class TableListComponent implements OnInit {
   tables: RestaurantTable[] = [];

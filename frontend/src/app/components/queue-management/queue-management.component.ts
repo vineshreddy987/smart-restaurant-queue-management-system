@@ -82,7 +82,7 @@ import { interval, Subscription } from 'rxjs';
   `,
   styles: [`
     .queue-status-card { max-width: 500px; margin: 0 auto; }
-    .queue-info { display: flex; gap: 40px; align-items: center; padding: 20px 0; }
+    .queue-info { display: flex; gap: 40px; align-items: center; padding: 20px 0; flex-wrap: wrap; justify-content: center; }
     .position-display { text-align: center; }
     .position-number { font-size: 72px; font-weight: bold; color: #3f51b5; display: block; }
     .position-label { color: #666; }
@@ -98,10 +98,20 @@ import { interval, Subscription } from 'rxjs';
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
     }
-    .disabled-notice mat-icon { color: #ff9800; font-size: 32px; width: 32px; height: 32px; }
+    .disabled-notice mat-icon { color: #ff9800; font-size: 32px; width: 32px; height: 32px; flex-shrink: 0; }
     .disabled-notice p { margin: 0; }
     mat-card.disabled { opacity: 0.5; pointer-events: none; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 600px) {
+      .queue-info { gap: 20px; flex-direction: column; }
+      .position-number { font-size: 56px; }
+      .queue-details { width: 100%; }
+      mat-card { margin: 0 8px; }
+      mat-card-actions button { width: 100%; }
+    }
   `]
 })
 export class QueueManagementComponent implements OnInit, OnDestroy {

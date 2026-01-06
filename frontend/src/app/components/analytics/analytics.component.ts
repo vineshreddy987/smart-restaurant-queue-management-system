@@ -254,7 +254,7 @@ import { AuthService } from '../../services/auth.service';
   styles: [`
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
     .stat-card mat-card-content { display: flex; align-items: center; gap: 16px; padding: 20px; }
-    .stat-card mat-icon { font-size: 40px; width: 40px; height: 40px; }
+    .stat-card mat-icon { font-size: 40px; width: 40px; height: 40px; flex-shrink: 0; }
     .stat-info { display: flex; flex-direction: column; }
     .stat-value { font-size: 28px; font-weight: bold; }
     .stat-label { color: #666; font-size: 14px; }
@@ -267,6 +267,22 @@ import { AuthService } from '../../services/auth.service';
     .role-customer { background-color: #e3f2fd !important; }
     .role-manager { background-color: #fff3e0 !important; }
     .role-admin { background-color: #fce4ec !important; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .stat-card mat-card-content { padding: 16px; gap: 12px; }
+      .stat-card mat-icon { font-size: 32px; width: 32px; height: 32px; }
+      .stat-value { font-size: 24px; }
+      .tab-content { padding: 12px; }
+    }
+    
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat-card mat-card-content { flex-direction: column; text-align: center; }
+      .stat-info { align-items: center; }
+      h2 { font-size: 1.25rem; }
+    }
   `]
 })
 export class AnalyticsComponent implements OnInit {

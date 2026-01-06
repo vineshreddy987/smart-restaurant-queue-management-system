@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -23,7 +24,7 @@ import { switchMap } from 'rxjs/operators';
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
-  imports: [ReactiveFormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MatTabsModule, MatTableModule, MatChipsModule, MatDialogModule, MatSnackBarModule, MatBadgeModule, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatIconModule, MatTabsModule, MatTableModule, MatChipsModule, MatDialogModule, MatSnackBarModule, MatBadgeModule, DatePipe],
   template: `
     <h2>Manager Dashboard</h2>
     
@@ -149,6 +150,12 @@ import { switchMap } from 'rxjs/operators';
       <!-- Reservations Tab -->
       <mat-tab label="Reservations">
         <div class="tab-content">
+          <div class="tab-header">
+            <h3>Active Reservations</h3>
+            <a mat-stroked-button routerLink="/manager/history">
+              <mat-icon>history</mat-icon> View Full History
+            </a>
+          </div>
           <table mat-table [dataSource]="reservations" class="full-width">
             <ng-container matColumnDef="table">
               <th mat-header-cell *matHeaderCellDef>Table</th>
@@ -277,11 +284,13 @@ import { switchMap } from 'rxjs/operators';
   `,
   styles: [`
     .tab-content { padding: 20px; }
+    .tab-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    .tab-header h3 { margin: 0; }
     .add-table-card form { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
     .add-table-card mat-form-field { width: 150px; }
-    mat-card-actions { display: flex; gap: 8px; }
-    .dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-    .seat-dialog { width: 400px; padding: 20px; }
+    mat-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 16px; }
+    .seat-dialog { width: 400px; max-width: 100%; padding: 20px; }
     
     .alert-bar { 
       background: #fff3e0; 
@@ -292,14 +301,15 @@ import { switchMap } from 'rxjs/operators';
       align-items: center; 
       gap: 12px;
       border-radius: 4px;
+      flex-wrap: wrap;
     }
     .alert-bar mat-icon { color: #ff9800; }
-    .alert-bar span { flex: 1; }
+    .alert-bar span { flex: 1; min-width: 150px; }
     
     .table-card.nearing-vacate { border: 2px solid #ff9800; }
     .warning-icon { color: #ff9800; margin-left: auto; }
     
-    .notifications-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .notifications-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
     .notifications-header h3 { margin: 0; }
     
     .warning-card { background: #fff8e1; margin-bottom: 20px; }
@@ -310,19 +320,38 @@ import { switchMap } from 'rxjs/operators';
       align-items: center; 
       gap: 12px; 
       padding: 12px 0; 
-      border-bottom: 1px solid #eee; 
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
     }
     .vacate-item:last-child { border-bottom: none; }
-    .vacate-info { flex: 1; display: flex; flex-direction: column; }
+    .vacate-info { flex: 1; display: flex; flex-direction: column; min-width: 150px; }
     .vacate-info span { font-size: 12px; color: #666; }
     
     .notifications-list { display: flex; flex-direction: column; gap: 12px; }
     .notification-card { transition: all 0.2s; }
     .notification-card.unread { background: #e3f2fd; border-left: 4px solid #1976d2; }
-    .notification-content { display: flex; align-items: center; gap: 12px; }
-    .notification-text { flex: 1; }
+    .notification-content { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .notification-text { flex: 1; min-width: 200px; }
     .notification-text p { margin: 0 0 4px 0; }
     .notification-text small { color: #666; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .tab-content { padding: 12px; }
+      .add-table-card form { flex-direction: column; align-items: stretch; }
+      .add-table-card mat-form-field { width: 100%; }
+      .seat-dialog { width: 100%; padding: 16px; }
+      .alert-bar { padding: 10px 12px; }
+      .vacate-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .vacate-item button { width: 100%; }
+    }
+    
+    @media (max-width: 600px) {
+      .tab-content { padding: 8px; }
+      mat-card-actions { flex-direction: column; }
+      mat-card-actions button { width: 100%; }
+      .notification-content { flex-direction: column; align-items: flex-start; }
+    }
   `]
 })
 export class ManagerDashboardComponent implements OnInit, OnDestroy {

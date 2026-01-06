@@ -55,10 +55,15 @@ import { AuthService } from '../../services/auth.service';
     </div>
   `,
   styles: [`
-    .register-container { display: flex; justify-content: center; margin-top: 50px; }
-    mat-card { width: 400px; padding: 20px; }
+    .register-container { display: flex; justify-content: center; margin-top: 50px; padding: 16px; }
+    mat-card { width: 400px; max-width: 100%; padding: 20px; }
     mat-form-field { margin-bottom: 16px; }
     mat-card-actions { text-align: center; }
+    
+    @media (max-width: 480px) {
+      .register-container { margin-top: 20px; }
+      mat-card { padding: 16px; }
+    }
   `]
 })
 export class RegisterComponent {

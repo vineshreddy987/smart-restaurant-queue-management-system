@@ -1,10 +1,19 @@
 import { Router, Response } from 'express';
-import { body, validationResult } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import pool from '../config/database';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 const router = Router();
+
+// Reservation status constants
+const ReservationStatus = {
+  RESERVED: 'RESERVED',
+  OCCUPIED: 'OCCUPIED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  EXPIRED: 'EXPIRED'
+} as const;
 
 // Helper to get system setting
 async function getSetting(key: string, defaultValue: string): Promise<string> {
@@ -74,6 +83,155 @@ router.get('/my-reservations', authenticate, async (req: AuthRequest, res: Respo
   } catch (error) {
     console.error('Error fetching reservations:', error);
     res.status(500).json({ message: 'Error fetching reservations' });
+  }
+});
+
+// ==================== BOOKING HISTORY ENDPOINTS ====================
+
+// Get booking history (role-based)
+router.get('/history', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+    const { status, startDate, endDate, tableId, customerId, limit = 50, offset = 0 } = req.query;
+
+    let query = `
+      SELECT rh.*, 
+             u.name as customer_name, u.email as customer_email, u.contact_info,
+             cb.name as created_by_name, cb.role as created_by_user_role,
+             sb.name as seated_by_name
+      FROM reservation_history rh
+      JOIN users u ON rh.customer_id = u.id
+      LEFT JOIN users cb ON rh.created_by_id = cb.id
+      LEFT JOIN users sb ON rh.seated_by_id = sb.id
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+
+    // Role-based filtering
+    if (userRole === 'Customer') {
+      // Customers can only see their own history
+      query += ' AND rh.customer_id = ?';
+      params.push(userId);
+    } else if (userRole === 'Manager') {
+      // Managers can see all customer reservations and their own actions
+      // No additional filter needed - they see all
+    }
+    // Admin sees everything - no filter
+
+    // Apply filters
+    if (status) {
+      query += ' AND rh.status = ?';
+      params.push(status);
+    }
+    if (startDate) {
+      query += ' AND DATE(rh.reservation_time) >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      query += ' AND DATE(rh.reservation_time) <= ?';
+      params.push(endDate);
+    }
+    if (tableId) {
+      query += ' AND rh.table_id = ?';
+      params.push(tableId);
+    }
+    if (customerId && userRole !== 'Customer') {
+      query += ' AND rh.customer_id = ?';
+      params.push(customerId);
+    }
+
+    query += ' ORDER BY rh.created_at DESC LIMIT ? OFFSET ?';
+    params.push(Number(limit), Number(offset));
+
+    const [history] = await pool.query<RowDataPacket[]>(query, params);
+
+    // Get total count for pagination
+    let countQuery = `SELECT COUNT(*) as total FROM reservation_history rh WHERE 1=1`;
+    const countParams: any[] = [];
+
+    if (userRole === 'Customer') {
+      countQuery += ' AND rh.customer_id = ?';
+      countParams.push(userId);
+    }
+    if (status) {
+      countQuery += ' AND rh.status = ?';
+      countParams.push(status);
+    }
+    if (startDate) {
+      countQuery += ' AND DATE(rh.reservation_time) >= ?';
+      countParams.push(startDate);
+    }
+    if (endDate) {
+      countQuery += ' AND DATE(rh.reservation_time) <= ?';
+      countParams.push(endDate);
+    }
+
+    const [countResult] = await pool.query<RowDataPacket[]>(countQuery, countParams);
+
+    res.json({
+      history,
+      total: countResult[0].total,
+      limit: Number(limit),
+      offset: Number(offset)
+    });
+  } catch (error) {
+    console.error('Error fetching reservation history:', error);
+    res.status(500).json({ message: 'Error fetching reservation history' });
+  }
+});
+
+// Get history statistics (for dashboard)
+router.get('/history/stats', authenticate, authorize('Manager', 'Admin'), async (req: AuthRequest, res: Response) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    let dateFilter = '';
+    const params: any[] = [];
+    
+    if (startDate) {
+      dateFilter += ' AND DATE(created_at) >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      dateFilter += ' AND DATE(created_at) <= ?';
+      params.push(endDate);
+    }
+
+    const [stats] = await pool.query<RowDataPacket[]>(`
+      SELECT 
+        COUNT(*) as total_reservations,
+        SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled,
+        SUM(CASE WHEN status = 'EXPIRED' THEN 1 ELSE 0 END) as expired,
+        SUM(CASE WHEN status = 'RESERVED' THEN 1 ELSE 0 END) as active_reserved,
+        SUM(CASE WHEN status = 'OCCUPIED' THEN 1 ELSE 0 END) as currently_occupied,
+        AVG(reservation_duration) as avg_duration,
+        AVG(party_size) as avg_party_size
+      FROM reservation_history
+      WHERE 1=1 ${dateFilter}
+    `, params);
+
+    // Daily breakdown for last 7 days
+    const [dailyStats] = await pool.query<RowDataPacket[]>(`
+      SELECT 
+        DATE(created_at) as date,
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled
+      FROM reservation_history
+      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `);
+
+    res.json({
+      summary: stats[0],
+      dailyBreakdown: dailyStats
+    });
+  } catch (error) {
+    console.error('Error fetching history stats:', error);
+    res.status(500).json({ message: 'Error fetching history statistics' });
   }
 });
 
@@ -226,6 +384,14 @@ router.post('/', authenticate, [
       [customerId, mysqlDateTime, reservationDuration, table_id]
     );
 
+    // Save to reservation history
+    await pool.query(
+      `INSERT INTO reservation_history 
+       (customer_id, table_id, table_number, table_type, party_size, reservation_time, reservation_duration, status, created_by_id, created_by_role)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'RESERVED', ?, ?)`,
+      [customerId, table_id, table.table_number, table.type, party_size, mysqlDateTime, reservationDuration, customerId, req.user?.role || 'Customer']
+    );
+
     res.status(201).json({ 
       message: 'Reservation made successfully',
       duration: reservationDuration
@@ -243,20 +409,47 @@ router.delete('/:tableId', authenticate, async (req: AuthRequest, res: Response)
     const customerId = req.user?.userId;
     const userRole = req.user?.role;
 
-    let query = `UPDATE restaurant_tables SET status = 'Available', current_customer_id = NULL, reservation_time = NULL WHERE id = ? AND status = 'Reserved'`;
-    const params: any[] = [tableId];
+    // Get reservation details before cancelling
+    const [reservationDetails] = await pool.query<RowDataPacket[]>(
+      `SELECT * FROM restaurant_tables WHERE id = ? AND status = 'Reserved'`,
+      [tableId]
+    );
+
+    if (reservationDetails.length === 0) {
+      return res.status(404).json({ message: 'Reservation not found' });
+    }
+
+    const reservation = reservationDetails[0];
 
     // Customers can only cancel their own reservations
-    if (userRole === 'Customer') {
-      query += ' AND current_customer_id = ?';
-      params.push(customerId);
+    if (userRole === 'Customer' && reservation.current_customer_id !== customerId) {
+      return res.status(403).json({ message: 'Not authorized to cancel this reservation' });
     }
 
-    const [result] = await pool.query<ResultSetHeader>(query, params);
+    // Update table status
+    await pool.query(
+      `UPDATE restaurant_tables SET status = 'Available', current_customer_id = NULL, reservation_time = NULL, reservation_duration = NULL WHERE id = ?`,
+      [tableId]
+    );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Reservation not found or not authorized' });
-    }
+    // Update reservation history
+    const formatForMySQL = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      const secs = String(d.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+    };
+
+    await pool.query(
+      `UPDATE reservation_history 
+       SET status = 'CANCELLED', completed_at = ?
+       WHERE table_id = ? AND customer_id = ? AND status = 'RESERVED'
+       ORDER BY created_at DESC LIMIT 1`,
+      [formatForMySQL(new Date()), tableId, reservation.current_customer_id]
+    );
 
     res.json({ message: 'Reservation cancelled successfully' });
   } catch (error) {
@@ -269,6 +462,7 @@ router.delete('/:tableId', authenticate, async (req: AuthRequest, res: Response)
 router.post('/confirm/:tableId', authenticate, authorize('Manager', 'Admin'), async (req: AuthRequest, res: Response) => {
   try {
     const { tableId } = req.params;
+    const seatedById = req.user?.userId;
 
     // Get reservation details including duration and customer info
     const [reservations] = await pool.query<RowDataPacket[]>(
@@ -309,6 +503,15 @@ router.post('/confirm/:tableId', authenticate, authorize('Manager', 'Admin'), as
       return res.status(404).json({ message: 'Reservation not found' });
     }
 
+    // Update reservation history to OCCUPIED status
+    await pool.query(
+      `UPDATE reservation_history 
+       SET status = 'OCCUPIED', seated_by_id = ?
+       WHERE table_id = ? AND customer_id = ? AND status = 'RESERVED'
+       ORDER BY created_at DESC LIMIT 1`,
+      [seatedById, tableId, reservation.current_customer_id]
+    );
+
     // Schedule notification for table vacate
     const { scheduleVacateNotification } = await import('../services/notificationScheduler');
     await scheduleVacateNotification(
@@ -327,6 +530,51 @@ router.post('/confirm/:tableId', authenticate, authorize('Manager', 'Admin'), as
   } catch (error) {
     console.error('Error confirming reservation:', error);
     res.status(500).json({ message: 'Error confirming reservation' });
+  }
+});
+
+// Complete reservation (when table is vacated) - Manager only
+router.post('/complete/:tableId', authenticate, authorize('Manager', 'Admin'), async (req: AuthRequest, res: Response) => {
+  try {
+    const { tableId } = req.params;
+
+    // Get current table info
+    const [tables] = await pool.query<RowDataPacket[]>(
+      `SELECT * FROM restaurant_tables WHERE id = ? AND status = 'Occupied'`,
+      [tableId]
+    );
+
+    if (tables.length === 0) {
+      return res.status(404).json({ message: 'Occupied table not found' });
+    }
+
+    const table = tables[0];
+
+    const formatForMySQL = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      const secs = String(d.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${mins}:${secs}`;
+    };
+
+    // Update reservation history to COMPLETED
+    if (table.current_customer_id) {
+      await pool.query(
+        `UPDATE reservation_history 
+         SET status = 'COMPLETED', completed_at = ?
+         WHERE table_id = ? AND customer_id = ? AND status = 'OCCUPIED'
+         ORDER BY created_at DESC LIMIT 1`,
+        [formatForMySQL(new Date()), tableId, table.current_customer_id]
+      );
+    }
+
+    res.json({ message: 'Reservation marked as completed' });
+  } catch (error) {
+    console.error('Error completing reservation:', error);
+    res.status(500).json({ message: 'Error completing reservation' });
   }
 });
 

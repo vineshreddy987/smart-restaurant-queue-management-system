@@ -22,3 +22,113 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   transition: transform 0.2s;
 }
 .table-card:hover { transform: translateY(-4px); }
+
+/* Mobile Responsive Utilities */
+@media (max-width: 768px) {
+  .container { padding: 12px; }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  /* Hide on mobile */
+  .hide-mobile { display: none !important; }
+  
+  /* Stack elements vertically on mobile */
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  /* Full width on mobile */
+  .mobile-full-width {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+  
+  /* Responsive tables - horizontal scroll */
+  .mat-mdc-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Tab labels smaller on mobile */
+  .mat-mdc-tab-labels {
+    flex-wrap: wrap;
+  }
+  
+  .mat-mdc-tab {
+    min-width: auto !important;
+    padding: 0 12px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .container { padding: 8px; }
+  
+  h2 { font-size: 1.25rem; }
+  
+  /* Smaller cards on mobile */
+  mat-card {
+    margin-bottom: 12px;
+  }
+  
+  /* Responsive tables */
+  .mat-mdc-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Smaller table cells */
+  .mat-mdc-cell, .mat-mdc-header-cell {
+    padding: 8px 12px !important;
+    font-size: 13px;
+  }
+  
+  /* Buttons full width on small screens */
+  .mobile-btn-full {
+    width: 100% !important;
+  }
+}
+
+/* Responsive form fields */
+@media (max-width: 600px) {
+  mat-form-field {
+    width: 100% !important;
+  }
+  
+  .filters-row, .form-row {
+    flex-direction: column;
+    gap: 8px !important;
+  }
+  
+  .filters-row mat-form-field,
+  .form-row mat-form-field {
+    min-width: unset !important;
+    width: 100% !important;
+  }
+}
+
+/* Responsive dialog/modal */
+@media (max-width: 600px) {
+  .mat-mdc-dialog-container {
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+  }
+}
+
+/* Touch-friendly buttons */
+@media (max-width: 768px) {
+  button.mat-mdc-button,
+  button.mat-mdc-raised-button,
+  button.mat-mdc-stroked-button {
+    min-height: 44px;
+  }
+  
+  .mat-mdc-icon-button {
+    width: 44px;
+    height: 44px;
+  }
+}

@@ -15,7 +15,7 @@ import { AuthService } from '../../services/auth.service';
     <header class="header">
       <div class="header-content">
         <div class="logo">
-          <img src="assets/images/logo-chair.png" alt="SmartServe" class="logo-icon">
+          <img src="assets/images/logo-chair.png" alt="SmartServe" class="logo-icon" width="44" height="44">
           <span class="logo-text">SmartServe</span>
         </div>
         <nav class="nav-links">
@@ -54,7 +54,7 @@ import { AuthService } from '../../services/auth.service';
     <section class="hero">
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <img src="assets/images/logo-chair.png" alt="SmartServe" class="hero-logo">
+        <img src="assets/images/logo-chair.png" alt="SmartServe" class="hero-logo" width="150" height="150">
         <h1 class="hero-title">SmartServe</h1>
         <p class="hero-tagline">Smart Seating. Seamless Service.</p>
         <p class="hero-description">
@@ -88,7 +88,7 @@ import { AuthService } from '../../services/auth.service';
         
         <div class="feature-card highlight">
           <div class="feature-icon">
-            <img src="assets/images/logo-chair.png" alt="Smart Seating" class="feature-img">
+            <img src="assets/images/logo-chair.png" alt="Smart Seating" class="feature-img" width="60" height="60">
           </div>
           <h3>Efficient Table Turnover</h3>
           <p>Optimize seating with smart duration tracking and automated notifications for seamless service.</p>
@@ -232,7 +232,7 @@ import { AuthService } from '../../services/auth.service';
     <footer class="footer">
       <div class="footer-content">
         <div class="footer-brand">
-          <img src="assets/images/logo-chair.png" alt="SmartServe" class="footer-logo">
+          <img src="assets/images/logo-chair.png" alt="SmartServe" class="footer-logo" width="70" height="70">
           <span class="footer-title">SmartServe</span>
           <p class="footer-tagline">Smart Seating. Seamless Service.</p>
         </div>

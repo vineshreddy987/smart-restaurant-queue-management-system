@@ -20,6 +20,65 @@ A full-stack web application for managing restaurant seating, waiting queues, an
 | Database         | MySQL                                   |
 | Authentication   | JWT (JSON Web Tokens)                   |
 
+## 📁 Project Structure
+
+```
+smart-restaurant-queue-management-system/
+├── backend/
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── database.ts          # Database connection & schema
+│   │   ├── middleware/
+│   │   │   └── auth.ts              # JWT authentication middleware
+│   │   ├── routes/
+│   │   │   ├── admin.ts             # Admin management APIs
+│   │   │   ├── analytics.ts         # Analytics & reporting APIs
+│   │   │   ├── auth.ts              # Authentication APIs
+│   │   │   ├── chatbot.ts           # Chatbot APIs
+│   │   │   ├── notifications.ts     # Notification APIs
+│   │   │   ├── queue.ts             # Queue management APIs
+│   │   │   ├── reservations.ts      # Reservation & history APIs
+│   │   │   └── tables.ts            # Table management APIs
+│   │   ├── services/
+│   │   │   └── notificationScheduler.ts
+│   │   ├── types/
+│   │   │   └── index.ts             # TypeScript interfaces
+│   │   └── index.ts                 # Express app entry point
+│   ├── package.json
+│   └── tsconfig.json
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── components/
+│   │   │   │   ├── admin/           # Admin dashboard, users, settings, logs
+│   │   │   │   ├── analytics/       # Analytics dashboard
+│   │   │   │   ├── booking-history/ # Customer, Manager, Admin history views
+│   │   │   │   ├── chatbot/         # Chatbot widget
+│   │   │   │   ├── landing/         # Landing page
+│   │   │   │   ├── login/           # Login page
+│   │   │   │   ├── manager-dashboard/
+│   │   │   │   ├── queue-management/
+│   │   │   │   ├── register/        # Registration page
+│   │   │   │   ├── reservation/     # Reservation form
+│   │   │   │   ├── table-list/      # Table listing
+│   │   │   │   ├── table-visualization/
+│   │   │   │   └── unauthorized/
+│   │   │   ├── guards/              # Route guards
+│   │   │   ├── interceptors/        # HTTP interceptors
+│   │   │   ├── services/            # API services
+│   │   │   ├── app.component.ts     # Root component
+│   │   │   └── app.routes.ts        # Route definitions
+│   │   ├── assets/
+│   │   │   └── images/              # Logo and images
+│   │   ├── index.html
+│   │   ├── main.ts
+│   │   └── styles.css
+│   ├── angular.json
+│   ├── package.json
+│   └── tsconfig.json
+└── README.md
+```
+
 ## 🏠 Landing Page
 
 The application features a professional landing page at `/` with:
@@ -63,6 +122,7 @@ The application features a professional landing page at `/` with:
 - Join waiting queue with party size and table preference
 - Make table reservations with date/time selection (dropdown-based)
 - View and cancel own reservations
+- **View personal booking history** (completed, cancelled, expired reservations)
 - Real-time queue position tracking
 - Chatbot assistant for natural language interactions
 
@@ -74,6 +134,8 @@ The application features a professional landing page at `/` with:
 - Update table status (Available/Occupied/Reserved)
 - Alert bar for tables nearing vacate time
 - Notifications tab with history
+- **View complete booking history** with filters (date, table, status)
+- **Booking statistics dashboard** (completed, cancelled, expired counts)
 
 ### Admin Features
 - User management (create, edit, activate/deactivate, delete)
@@ -82,6 +144,9 @@ The application features a professional landing page at `/` with:
 - Activity logs and analytics
 - System health monitoring
 - Configurable reservation duration limits
+- **Full system booking history** with advanced filters
+- **Filter by customer, role, date range, table, status**
+- **Track who created and seated each reservation**
 
 ## Authentication & Security
 
@@ -129,6 +194,28 @@ The application features a professional landing page at `/` with:
 - current_customer_id (nullable), reservation_time (nullable)
 - reservation_duration (minutes), occupied_at (datetime)
 - is_enabled, created_at
+
+### Auxiliary Tables
+
+**Queue Table**
+- id, customer_id, party_size, table_type (Regular/VIP)
+- position, status (Waiting/Seated/Cancelled), joined_at
+
+**Reservation History Table**
+- id, customer_id, table_id, table_number, table_type
+- party_size, reservation_time, reservation_duration
+- status (RESERVED/OCCUPIED/COMPLETED/CANCELLED/EXPIRED)
+- created_by_id, created_by_role, seated_by_id
+- completed_at, created_at
+
+**System Settings Table**
+- id, setting_key, setting_value, updated_at
+
+**Admin Logs Table**
+- id, admin_id, action_type, details, created_at
+
+**Error Logs Table**
+- id, error_type, message, stack_trace, user_id, endpoint, created_at
 
 ## Setup Instructions
 
@@ -192,6 +279,9 @@ App runs on http://localhost:4200
 - `POST /api/reservations` - Make reservation (with optional duration)
 - `DELETE /api/reservations/:id` - Cancel reservation
 - `POST /api/reservations/confirm/:id` - Confirm reservation (Manager)
+- `GET /api/reservations/history` - Get booking history (role-based)
+- `GET /api/reservations/history/stats` - Get history statistics (Manager/Admin)
+- `POST /api/reservations/complete/:id` - Mark reservation completed (Manager)
 
 ### Notifications
 - `GET /api/notifications` - Get manager notifications
@@ -211,16 +301,34 @@ App runs on http://localhost:4200
 - `PUT /api/admin/settings/:key` - Update setting
 - `GET /api/admin/logs` - Get activity logs
 
+### Analytics
+- `GET /api/analytics/dashboard` - Dashboard analytics (Manager/Admin)
+- `GET /api/analytics/users` - List all users (Admin)
+- `GET /api/analytics/users/:id` - Get user details (Admin)
+- `PUT /api/analytics/users/:id` - Update user (Admin)
+- `PATCH /api/analytics/users/:id/role` - Update user role (Admin)
+- `DELETE /api/analytics/users/:id` - Delete user (Admin)
+- `GET /api/analytics/queue/all` - Get all queue entries (Manager/Admin)
+- `DELETE /api/analytics/queue/:id` - Remove from queue (Manager/Admin)
+- `GET /api/analytics/reservations/all` - Get all reservations (Manager/Admin)
+- `GET /api/analytics/system` - System overview (Admin)
+
 ## Role-Based Access Control
 
-| Route                | Customer | Manager | Admin |
-| -------------------- | -------- | ------- | ----- |
-| `/tables`            | ✓        | ✓       | ✓    |
-| `/queue`             | ✓        | ✓       | ✓    |
-| `/reservation`       | ✓        | ✓       | ✓    |
-| `/manager/dashboard` | ✗        | ✓       | ✓    |
-| `/analytics`         | ✗        | ✓       | ✓    |
-| `/admin/*`           | ✗        | ✗       | ✓    |
+| Route                   | Customer | Manager | Admin |
+| ----------------------- | -------- | ------- | ----- |
+| `/tables`               | ✓        | ✓       | ✓    |
+| `/queue`                | ✓        | ✓       | ✓    |
+| `/reservation`          | ✓        | ✓       | ✓    |
+| `/reservations/history` | ✓        | ✓       | ✓    |
+| `/manager/dashboard`    | ✗        | ✓       | ✓    |
+| `/manager/history`      | ✗        | ✓       | ✓    |
+| `/analytics`            | ✗        | ✓       | ✓    |
+| `/admin/dashboard`      | ✗        | ✗       | ✓    |
+| `/admin/users`          | ✗        | ✗       | ✓    |
+| `/admin/history`        | ✗        | ✗       | ✓    |
+| `/admin/settings`       | ✗        | ✗       | ✓    |
+| `/admin/logs`           | ✗        | ✗       | ✓    |
 
 
 ## Validation Rules
@@ -287,6 +395,58 @@ Dynamic SVG-based table visualization with:
 - Errors logged to database
 - User-friendly messages via snackbar
 - Appropriate HTTP status codes (400, 401, 403, 404, 500)
+
+## Booking History Feature
+
+The system maintains a permanent record of all reservations with role-based visibility.
+
+### Reservation Status Flow
+```
+RESERVED → OCCUPIED → COMPLETED
+    ↓          ↓
+CANCELLED  CANCELLED
+    ↓
+EXPIRED (if not confirmed before reservation time)
+```
+
+### Customer History (`/reservations/history`)
+- View personal booking history only
+- Filter by status, date range
+- See table number, type, time, duration, status
+- Pagination and sorting support
+
+### Manager History (`/manager/history`)
+- View all customer reservations
+- Statistics dashboard (completed, cancelled, expired counts)
+- Filter by status, table, date range
+- See who seated each customer
+- Export-ready table view
+
+### Admin History (`/admin/history`)
+- Full system-wide booking history
+- Advanced filters: customer, role, date range, table, status
+- Track who created each reservation (Customer/Manager/Admin)
+- Track who seated each customer
+- Complete audit trail with timestamps
+
+### History Data Tracked
+- Customer information (name, email, contact)
+- Table details (number, type, capacity)
+- Reservation details (time, duration, party size)
+- Status changes with timestamps
+- Created by (user ID and role)
+- Seated by (manager/admin who confirmed)
+- Completion timestamp
+
+## Analytics Dashboard
+
+The analytics page (`/analytics`) provides insights for Managers and Admins:
+
+- Queue statistics and trends
+- Table utilization rates
+- Peak hours analysis
+- Reservation patterns
+- Daily/weekly activity charts
 
 
 
